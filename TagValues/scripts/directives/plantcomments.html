@@ -1,0 +1,33 @@
+<md-dialog aria-label="Plant Comments">
+    <form ng-cloak>
+        <md-toolbar>
+            <div class="md-toolbar-tools">
+                <h2>Previous Plant Comments</h2>
+                <span flex></span>
+                <md-button class="md-icon-button" ng-click="closeDialog()">
+                    <md-icon aria-label="close" class="material-icons">close</md-icon>
+                </md-button>
+            </div>
+        </md-toolbar>
+
+        <div class="md-dialog-content">
+            <div ng-hide="data.selectedPlant.Attributes['Status Comment'].prevVals.length">Loading...
+            </div>
+            <md-list >
+                <md-list-item class="md-2-line" ng-click="null" ng-repeat="val in data.selectedPlant.Attributes['Status Comment'].prevVals">
+                    <md-icon aria-label="comment " class="md-avatar material-icons">mode_comment</md-icon>
+                    <div class="md-list-item-text">
+                        {{val.Value.Name || val.Value}} 
+                        <br/><small>--{{val.Timestamp | timeAgo}}</small>
+                    </div>
+                </md-list-item>
+            </md-list>
+        </div>
+
+        <md-dialog-actions layout="row">
+            <md-button ng-click="closeDialog()">
+                Ok
+            </md-button>
+        </md-dialog-actions>
+    </form>
+</md-dialog>

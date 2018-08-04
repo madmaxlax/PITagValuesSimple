@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="myapp" ng-controller="appController as ctrlr">
+
+<head>
+	<title>STCH PI Tag Values</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="shortcut icon" href="favicon.ico">
+	<link rel="icon" type="image/png" sizes="32x32" href="./images/favicon-32x32.png">
+	<link rel="apple-touch-icon" href="images/icons/apple-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/icons/apple-icon-72x72.png">
+	<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+	<!--<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">-->
+	<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.0/angular-material.min.css">
+	<link rel="stylesheet" type="text/css" href="styles.css" />
+
+</head>
+
+<body ng-keypress="shortcutKeypress($event)">
+	<md-toolbar layout="row" class="md-toolbar-tools" ng-cloak layout-align="space-between center">
+		<h1>STCH PI Tag Values</h1>
+		<div>
+			<md-progress-circular ng-show="isUpdating" class="md-warn" md-mode="indeterminate"></md-progress-circular>
+		</div>
+		
+		<md-button class="menu md-icon-button" hide-gt-md ng-click="toggleLeft()" aria-label="Show Nav">
+			<md-icon aria-label="settings" class="material-icons">settings</md-icon>
+		</md-button>
+	</md-toolbar>
+	<div flex layout="row" ng-cloak>
+
+		<!-- errors modal / dialog -->
+		<div style="visibility: hidden">
+			<div class="md-dialog-container" id="errorsDialog">
+				<md-dialog>
+					<form ng-cloak>
+						<md-toolbar>
+							<div class="md-toolbar-tools md-warn" md-colors="{background:'default-warn'}">
+								<h2>Error!</h2>
+								<span flex></span>
+								<md-button class="md-icon-button" ng-click="clearErrors()">
+									<md-icon aria-label="close" class="material-icons">close</md-icon>
+								</md-button>
+							</div>
+						</md-toolbar>
+						<md-dialog-content>
+							<div class="md-dialog-content">
+								<!-- <h2>Errors:</h2> -->
+								<div ng-repeat="error in errors">
+									<div ng-repeat="(errname, errmsg) in error">
+										<strong>{{errname}}</strong>: {{errmsg}}
+										<!-- <ul>
+										<li ng-repeat="(errmsgname, errmsgdetail) in errmsg">{{errmsgname+':'+errmsgdetail}}</li>
+									</ul> -->
+									</div>
+								</div>
+							</div>
+						</md-dialog-content>
+
+						<md-dialog-actions layout="row">
+							<md-button class="md-raised " href="mailto:pt-stca-pi-support@shell.com;Business-Assist-Engineering-ITV-TEE@shell.com&subject=PI Status Web App">
+								<md-icon aria-label="help" class="material-icons">help_outline</md-icon>
+								Need Support
+								<md-tooltip md-direction="Top">
+									Email the support team
+								</md-tooltip>
+							</md-button>
+							<span flex></span>
+							<md-button class="md-raised " ng-disabled="isUpdating" ng-click="clearErrors()">
+								Close and Clear Errors
+								<md-icon aria-label="close" class="material-icons">close</md-icon>
+							</md-button>
+						</md-dialog-actions>
+					</form>
+				</md-dialog>
+			</div>
+		</div>
+		<!--main content-->
+		<div layout="column" flex>
+			
+			<!--Tag values section-->
+			<md-content class="md-padding" ng-show="prefs.showTagValues">
+				<form ng-submit="newTagSearch()">
+					<div layout="row">
+						<md-input-container  flex flex="80" flex-xs="60">
+							<label>Tag Name / Mask</label>
+							<input ng-model="prefs.tagsSearch">
+						</md-input-container>
+						<!-- <md-autocomplete md-selected-item="prefs.tagsSearchSelectedPlant" flex md-search-text="prefs.tagsSearch" md-items="tagsearchplant in data.plants | filter:prefs.tagsSearch"
+							md-select-on-focus md-item-text="tagsearchplant.Name.replace('Plant ID ','')" md-floating-label="Tag Search (press .)"
+							md-item-text="tagsearchplant.Name.replace('Plant ID ','')" md-min-length="0" md-input-id="search-input-tags" md-selected-item-chage="prefs.tagsSearch=tagsearchplant.Name.replace('Plant ID ','');newTagSearch()">
+							<md-item-template>
+								<span md-highlight-text="prefs.tagsSearch" md-highlight-flags="i">{{tagsearchplant.Name.replace('Plant ID ','')}}</span>
+							</md-item-template>
+						</md-autocomplete> -->
+						<div flex="10" flex-xs="15">
+							<md-input-container>
+								<label>PointSource</label>
+								<input ng-model="prefs.tagSearchPointsource">
+							</md-input-container>
+						</div>
+						<div>
+							<md-switch ng-model="prefs.tagSearchAddStar">
+								<md-tooltip md-direction="top">
+									Whether or not to automatically add a * wild card to the end of the name search
+								</md-tooltip>
+								Add *?
+							</md-switch>
+						</div>
+						<div flex="10" flex-xs="15">
+							<md-input-container>
+								<label>Tag Count Limit</label>
+								<input ng-model="prefs.tagsCountLimit" maxlength="3">
+							</md-input-container>
+						</div>
+						<div>
+							<md-button class="md-raised md-primary" type="submit">
+								Search <span hide show-gt-sm>Tags (enter)</span>
+							</md-button>
+						</div>
+					</div>
+					<div layout="row" layout-wrap>
+						<div flex="nogrow">
+							<md-input-container>
+								<label>Tags returned</label>
+								<input ng-value="(data.tags.length?data.tags.length + ' of '+data.tagsTotalHits:'Loading ...')" readonly>
+							</md-input-container>
+						</div>
+						<md-input-container flex flex-xs="55" flex-sm="55">
+							<label>Filter within results: </label>
+							<input ng-model="prefs.tagsSearchFilter">
+						</md-input-container>
+						<div flex-xs="25" flex-sm="25" ng-show="prefs.tagsSearchFilter">
+							<md-button class="md-raised md-warn" ng-click="prefs.tagsSearchFilter=''">
+								<md-tooltip md-direction="top">
+									Clear Filter
+								</md-tooltip>
+								<md-icon class="material-icons">clear</md-icon>
+							</md-button>
+						</div>
+						<div>
+							<md-button class="md-raised" ng-click="RefreshTagValsGroup()">
+								<md-icon aria-label="refresh" class="material-icons">autorenew</md-icon> <span hide show-gt-sm>Refresh Values</span>
+							</md-button>
+						</div>
+						<!--<md-button class="md-raised" ng-click="RefreshTagValsGroup()">
+							<md-icon aria-label="refresh" class="material-icons">autorenew</md-icon> Refresh All Values at Once
+						</md-button>-->
+						<div>
+							<md-switch ng-model="prefs.tagsAutoRefreshEnabled" ng-change="tagsAutoRefreshSwitch()" aria-label="Enable Auto Refresh">
+								Auto Refresh Tag Vals?
+							</md-switch>
+						</div>
+						<div>
+							<md-input-container>
+								<label>Auto Refresh (seconds)</label>
+								<input ng-model="prefs.tagsAutoRefreshSeconds" ng-disabled="!prefs.tagsAutoRefreshEnabled">
+							</md-input-container>
+						</div>
+					</div>
+				</form>
+				<div>
+					(Tag values last updated {{prefs.tagsLastUpdated | timeAgo}})
+				</div>
+				<table class="tag-values-table">
+					<tr>
+						<th><a ng-click="prefs.tagsSortBy = 'Name'; prefs.tagsSortReverse= !prefs.tagsSortReverse">Name</a>
+							<md-icon ng-class="{flip:prefs.tagsSortReverse}"
+							 ng-show="prefs.tagsSortBy === 'Name'">filter_list</md-icon>
+						</th>
+						<th ng-if="prefs.tagsFetchAttributes">PointSource</th>
+						<th><a ng-click="prefs.tagsSortBy = 'curVal.Value'; prefs.tagsSortReverse= !prefs.tagsSortReverse">Value</a>
+							<md-icon ng-class="{flip:prefs.tagsSortReverse}"
+							 ng-show="prefs.tagsSortBy === 'curVal.Value'">filter_list</md-icon>
+						</th>
+						<th><a ng-click="prefs.tagsSortBy = 'curVal.Timestamp'; prefs.tagsSortReverse= !prefs.tagsSortReverse">Time</a>
+							<md-icon
+							 ng-class="{flip:prefs.tagsSortReverse}" ng-show="prefs.tagsSortBy === 'curVal.Timestamp'">filter_list</md-icon>
+						</th>
+					</tr>
+					<tr ng-hide="data.tags.length>0">
+						<td colspan="300">
+							<span ng-hide="data.noTagsFound">Loading... </span><span ng-show="data.noTagsFound">No Tags Found for {{data.noTagsFoundName}}</span>
+						</td>
+					</tr>
+					<tr ng-repeat="tag in data.tags | orderBy:prefs.tagsSortBy:prefs.tagsSortReverse | filter:prefs.tagsSearchFilter" ng-attr-title="{{tag.descriptor}}">
+						<td class="tag tag-name" ng-dblclick="prefs.tagsSearch=tag.Name;newTagSearch()">{{tag.Name}}
+							<!--<md-tooltip md-direction="top"> ng-dblclick="prefs.tagsSearch=tag.Name;prefs.tagsCountLimit=1;newTagSearch()"
+								{{tag.tagAttributes.descriptor.Value}}
+							</md-tooltip>-->
+						</td>
+						<td ng-if="prefs.tagsFetchAttributes">{{prefs.tagsFetchAttributes?(tag.tagAttributes.pointsource.Value || 'loading'):''}}</td>
+						<td>
+							<pi-value value="tag.curVal" prefs="prefs" format="true"></pi-value>
+						</td>
+						<td>
+							<pi-timestamp timestamp="tag.curVal.Timestamp" prefs="prefs"></pi-timestamp>
+						</td>
+					</tr>
+
+					<tr ng-show="data.tags.length===1">
+						<td colspan="300">
+							Getting recent values for {{data.tags[0].Name}}
+						</td>
+					</tr>
+
+					<tr ng-show="data.tags.length===1" ng-repeat="tagVal in data.tags[0].recentValues | orderBy:Timestamp">
+						<td class="tag tag-name"></td>
+						<td ng-if="prefs.tagsFetchAttributes"></td>
+						<td>
+							<pi-value value="tagVal" prefs="prefs" format="true"></pi-value>
+						</td>
+						<td>
+							<pi-timestamp timestamp="tagVal.Timestamp" prefs="prefs"></pi-timestamp>
+						</td>
+					</tr>
+				</table>
+			</md-content>
+		</div>
+		<!-- Side Nav Prefs -->
+		<md-sidenav class="md-sidenav-right" md-is-locked-open="$mdMedia('gt-md')" md-component-id="right" ng-click="">
+			<md-content class="md-padding">
+				<md-list>
+					<md-subheader class="">Preferences</md-subheader>
+					
+					<md-list-item>
+						<md-switch ng-model="prefs.showTagValues" aria-label="Show Tag Values">
+							Show Tag Values? key: <code>t</code>
+						</md-switch>
+					</md-list-item>
+					<md-list-item>
+						<md-switch ng-model="prefs.timeAMPM" aria-label="Time format">
+							Time Format AM/PM or 24hr
+						</md-switch>
+					</md-list-item>
+					<md-list-item>
+						<md-switch ng-model="prefs.tagsTimeago" aria-label="Auto Refresh">
+							Time format "ago"? {{ prefs.tagsTimeago?'On':'Off'}}
+						</md-switch>
+					</md-list-item>
+					<md-list-item>
+						<md-switch ng-model="prefs.tagsFetchAttributes" aria-label="Auto Refresh">
+							Fetch Tag Pointsource?
+							<md-tooltip md-direction="botom">
+								This slows the performance of a search so, when searching multiple tags it may save time to turn off the pointsource fetching
+							</md-tooltip>
+						</md-switch>
+					</md-list-item>
+					<md-list-item>
+						<md-switch ng-model="prefs.browserNotifications" aria-label="Auto Refresh" ng-change="getBrowerPermission()">
+							Browser Notifications?
+						</md-switch>
+					</md-list-item>
+					<div layout="row" layout-align="center center">
+						<md-button class="md-raised md-accent" ng-disabled="" ng-click="savePrefs()">Save Settings
+							<md-icon aria-label="save" class="material-icons">save</md-icon>
+						</md-button>
+					</div>
+					<md-divider></md-divider>
+					<div layout="row" layout-align="center center">
+						<md-button class="" ng-disabled="" target="_blank" href="https://houcy1-s-06438.americas.shell.com/piwebapi/help">
+							PI Web API Link
+							<md-icon aria-label="help" class="material-icons">help_outline</md-icon>
+							<md-tooltip md-direction="botom">
+								Click here if having problems getting data the first time.
+							</md-tooltip>
+						</md-button>
+					</div>
+					<div layout="row" layout-align="center center">
+						<md-button class="" ng-disabled="" target="_blank" href="https://houcy1-s-06438.americas.shell.com/piwebapi/streams/F1DPi_9owZo5nkaIxE7Q3uDe1wAQAAAAU1RDSFBJQ09MTFxTSU5VU09JRA/value">
+							PI Web API Value test
+							<md-icon aria-label="help" class="material-icons">help_outline</md-icon>
+							<md-tooltip md-direction="botom">
+								Click here if having problems getting data the first time.
+							</md-tooltip>
+						</md-button>
+					</div>
+					<md-divider></md-divider>
+				</md-list>
+			</md-content>
+		</md-sidenav>
+	</div>
+
+	<script src="./scripts/jquery.min.js"></script>
+	<script src="./scripts/bootstrap.min.js"></script>
+	<script src="./scripts/angular.min.js"></script>
+	<script src="./scripts/angular-resource.min.js"></script>
+	<script src="./scripts/angular-route.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular-animate.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular-aria.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular-messages.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angular_material/1.1.0/angular-material.min.js"></script>
+	<script src="./scripts/nglocalstorage.js"></script>
+	<script src="./scripts/angular-timeago.min.js"></script>
+	<script src="./scripts/app.js"></script>
+
+</body>
+
+</html>

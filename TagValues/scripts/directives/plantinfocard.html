@@ -1,0 +1,90 @@
+<md-card>
+    <md-card-header>
+        <md-card-avatar>
+            <i class="material-icons">business</i>
+        </md-card-avatar>
+        <md-card-header-text>
+            <span class="md-title"><strong>{{data.selectedPlant.Name}}</strong></span>
+            <span class="md-subhead">Plant Status: <pi-label-value value="data.selectedPlant.Attributes['Status/Note'].Value"></pi-label-value> </span>
+        </md-card-header-text>
+    </md-card-header>
+    <md-card-content>
+        <div class="status-table">
+            <div layout="row">
+                <md-input-container class="" flex>
+                    <md-tooltip md-direction="bottom">
+                        {{data.selectedPlant.Attributes['Owners/Contact Persons'].Value.Value}}
+                    </md-tooltip>
+                    <label><md-icon aria-label="Email" class="material-icons">person</md-icon> Owner</label>
+                    <input md-select-on-focus ng-model="data.selectedPlant.Attributes['Owners/Contact Persons'].Value.Value" readonly="readonly">
+                </md-input-container>
+                <md-button class="md-fab" title="Email Owner" ng-href="mailto:{{data.selectedPlant.Attributes['Owners/Contact Persons'].Value.Value | encodeURIComponent}}?from=pt-stca-PI-support@shell.com&subject={{data.selectedPlant.Attributes['ID'].Value.Value | encodeURIComponent}} PI Data">
+                    <md-tooltip md-direction="top">
+                        Send email to user about {{data.selectedPlant.Name}}
+                    </md-tooltip>
+                    <md-icon aria-label="Email" class="material-icons">send</md-icon>
+                </md-button>
+            </div>
+            <div layout="row">
+                <!--display WBS-->
+                <md-input-container class="" flex ng-hide="data.selectedPlant.Attributes['WBS Code'].Value.Value=='zzpt\\' || data.selectedPlant.Attributes['WBS Code'].Value.Value==''">
+                    <md-tooltip md-direction="bottom">
+                    </md-tooltip>
+                    <label><md-icon aria-label="Email" class="material-icons">euro_symbol</md-icon> WBS</label>
+                    <input md-select-on-focus readonly="readonly" ng-value="data.selectedPlant.Attributes['WBS Code'].Value.Value">
+                </md-input-container>
+                <!--display GC ID -->
+                <md-input-container class="" flex ng-hide="data.selectedPlant.Attributes['GC ID'].Value.Value==''">
+                    <md-tooltip md-direction="bottom">
+                    </md-tooltip>
+                    <label><md-icon aria-label="Email" class="material-icons">gradient</md-icon> GC ID</label>
+                    <input md-select-on-focus readonly="readonly" ng-value="data.selectedPlant.Attributes['GC ID'].Value.Value">
+                </md-input-container>
+            </div>
+            <form ng-submit="updateValue(data.selectedPlant.Attributes['Status Comment'].WebId, 'Admin: '+data.selectedPlant.Attributes['Status Comment'].newValue)">
+                <md-input-container class="md-block">
+
+                    <md-tooltip md-direction="top">
+                        Currently: "{{data.selectedPlant.Attributes['Status Comment'].Value.Value}}" {{data.selectedPlant.Attributes['Status Comment'].Value.Timestamp | timeAgo}}
+                    </md-tooltip>
+                    <label>Status Comment</label>
+                    <input placeholder="{{data.selectedPlant.Attributes['Status Comment'].Value.Value}}" ng-model="data.selectedPlant.Attributes['Status Comment'].newValue">
+                </md-input-container>
+                <md-button class="md-fab md-mini" ng-disabled="isUpdating" ng-click="showRecentPlantComments()">
+                    <md-tooltip md-direction="top">
+                        See recent comments
+                    </md-tooltip>
+                    <md-icon aria-label="comment" class="material-icons">comment</md-icon>
+                </md-button>
+                <md-button class="md-raised" ng-disabled="isUpdating || !data.selectedPlant.Attributes['Status Comment'].newValue.length"
+                    type="submit">Update</md-button>
+                    <md-button class="md-raised md-primary" ng-disabled="isUpdating" ng-click="updateValue(data.selectedPlant.Attributes['Status Comment'].WebId, 'Admin: data coming in');updateValue(data.selectedPlant.Attributes['Status/Note'].WebId, {Value:0})"
+                        type="button">Set to OK
+                        <md-icon aria-label="comment" class="material-icons">check</md-icon>
+                        </md-button>
+
+            </form>
+            <form ng-submit="updateValue(data.selectedPlant.Attributes['Status/Note'].WebId, {Value:data.selectedPlant.Attributes['Status/Note'].Value.newStatusValue})">
+                <md-input-container>
+                    <label>Update status: {{data.selectedPlant.Attributes['Status/Note'].Value.Value.Name}}</label>
+                    <md-tooltip md-direction="top">
+                        Current status is: "{{data.selectedPlant.Attributes['Status/Note'].Value.Value.Name}}"
+                    </md-tooltip>
+                    <md-select title="Currently: {{data.selectedPlant.Attributes['Status/Note'].Value.Value.Name}}" class="md-no-underline" ng-model="data.selectedPlant.Attributes['Status/Note'].Value.newStatusValue">
+                        <md-option value="0">Good</md-option>
+                        <md-option value="1">Under Maintenance</md-option>
+                        <md-option value="2">Problem</md-option>
+                        <md-option value="3">Other</md-option>
+                        <md-option value="4">Shut down</md-option>
+                        <md-option value="5">Transitioning to OPC</md-option>
+                        <md-option value="6">Idle</md-option>
+                    </md-select>
+                </md-input-container>
+
+                <md-button class="md-raised" ng-disabled="isUpdating || !(data.selectedPlant.Attributes['Status/Note'].Value.newStatusValue >= 0 && data.selectedPlant.Attributes['Status/Note'].Value.newStatusValue <= 6)"
+                    type="submit">Update</md-button>
+            </form>
+
+        </div>
+    </md-card-content>
+</md-card>

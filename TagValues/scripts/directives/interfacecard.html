@@ -1,0 +1,95 @@
+<md-card>
+    <md-card-header>
+        <md-card-avatar>
+            <i class="material-icons">device_hub</i>
+        </md-card-avatar>
+        <md-card-header-text>
+            <span class="md-title">Interface: {{intrf.Attributes["Name"].Value.Value}} {{intrf.Name}}</span>
+            <div class="md-subhead">
+                Status Summary: <pi-label-value value="intrf.Attributes['Status Summary'].Value"></pi-label-value> 
+                <span>
+                    <md-tooltip md-direction="top">
+                        Interface uptime percentage for the past week
+                    </md-tooltip>
+                        Uptime: {{intrf.Attributes["Uptime Percent"].Value.Value | number:0}}%
+                </span>
+            </div>
+        </md-card-header-text>
+    </md-card-header>
+    <md-card-content>
+        <md-list>
+            <md-list-item class="md-2-line">
+                <md-icon aria-label="comment" class="md-avatar material-icons">timeline</md-icon>
+                <div class="md-list-item-text">
+                    <h3>Data status:</h3>
+                    <p>
+                        <pi-label-value value="intrf.Attributes['Intf Status Tag-Status'].Value"></pi-label-value> Last Good: <span class="timestamp">{{intrf.Attributes['Intf Status Tag.Last Good'].Value.Value.Name || intrf.Attributes['Intf Status Tag.Last Good'].Value.Value | timeAgo}}</span>
+                    </p>
+                </div>
+            </md-list-item>
+            <md-list-item class="md-2-line">
+                <md-icon aria-label="signal" ng-show="intrf.Attributes['Ping Latency'].Value.Value.Name == null" class="md-avatar material-icons">wifi</md-icon>
+                <md-icon aria-label="signal" ng-hide="intrf.Attributes['Ping Latency'].Value.Value.Name == null" class="md-avatar material-icons">signal_wifi_off</md-icon>
+                <div class="md-list-item-text">
+                    <h3>Ping status:</h3>
+                    <p>
+                        <span class="ping-response">
+                            <span ng-class="{'label label-warning':(intrf.Attributes['Ping Latency'].Value.Value.IsSystem && intrf.Attributes['Ping Latency'].Value.Value.Name != 'I/O Timeout'),'label label-success':(intrf.Attributes['Ping Latency'].Value.Value >= 0), 'label label-danger':(intrf.Attributes['Ping Latency'].Value.Value.Name.startsWith('I/O Timeout'))}">
+                                {{intrf.Attributes['Ping Latency'].Value.Value.Name == null?((intrf.Attributes['Ping Latency'].Value.Value | number:0) +' ms'):intrf.Attributes['Ping Latency'].Value.Value.Name}}</span>                        Last Good: <span class="timestamp">{{intrf.Attributes['Ping Latency.Last Good'].Value.Value.Name || intrf.Attributes['Ping Latency.Last Good'].Value.Value | timeAgo}}
+                                    <md-tooltip md-direction="top">
+                                        {{intrf.Attributes['Ping Latency.Last Good'].Value.Value.Name || intrf.Attributes['Ping Latency.Last Good'].Value.Value | timeAgo}}
+                                    </md-tooltip>
+                        </span> 
+                                <br/>
+                        <md-input-container>
+                            <label>IP Address: </label>
+                            <input ng-model="intrf.Attributes['Source Machine IP'].Value.Value" readonly="readonly" md-select-on-focus>
+                        </md-input-container> <span ng-show="intrf.Attributes['Source Machine IP'].Value.Value.startsWith('145.30.157')">VLAN 807 <md-icon>settings_input_composite</md-icon></span>
+                    </p>
+                </div>
+            </md-list-item>
+            <md-list-item class="md-2-line">
+                <div class="md-list-item-text">
+                    Plant ID:
+                    <md-button class="" ng-click="viewPlantDetails(intrf.Attributes['Plant ID'].Value.Value)">
+                        <md-tooltip md-direction="top">
+                            View full status for plant {{intrf.Attributes["Plant ID"].Value.Value}} and also search for values
+                        </md-tooltip>
+                        {{intrf.Attributes["Plant ID"].Value.Value}}
+                        <md-icon aria-label="go-to" class="material-icons">share</md-icon>
+                    </md-button>
+                </div>
+            </md-list-item>
+            <md-list-item class="md-2-line">
+                <div class="md-list-item-text">
+                    <form ng-submit="updateValue(intrf.Attributes['Status/Note'].WebId, {Value:intrf.newStatusValue})">
+                        <md-input-container>
+                            <label>Update status: {{intrf.Attributes['Status/Note'].Value.Value.Name}}</label>
+                            <md-tooltip md-direction="top">
+                                Current status is: "{{intrf.Attributes['Status/Note'].Value.Value.Name}}"
+                            </md-tooltip>
+                            <md-select class="md-no-underline" ng-model="intrf.newStatusValue">
+                                <md-option value="0">Good</md-option>
+                                <md-option value="1">Under Maintenance</md-option>
+                                <md-option value="2">Problem</md-option>
+                                <md-option value="3">Other</md-option>
+                                <md-option value="4">Shut down</md-option>
+                                <md-option value="5">Transitioning to OPC</md-option>
+                                <md-option value="6">Idle</md-option>
+                            </md-select>
+                        </md-input-container>
+
+                        <md-button class="md-raised" ng-click="updateValue(intrf.Attributes['Status/Note'].WebId, {Value:intrf.newStatusValue})"
+                            ng-disabled="isUpdating || !(intrf.newStatusValue >= 0 && intrf.newStatusValue <= 6)" type="submit">Update
+                            </md-button>
+
+                            <md-button class="md-raised md-primary" ng-disabled="isUpdating || intrf.Attributes['Status/Note'].Value.Value.Value === 0"
+                                ng-click="updateValue(intrf.Attributes['Status/Note'].WebId, {Value:0})" type="button">Set to OK
+                                <md-icon aria-label="comment" class="material-icons">check</md-icon>
+                                </md-button>
+                    </form>
+                </div>
+            </md-list-item>
+        </md-list>
+    </md-card-content>
+</md-card>

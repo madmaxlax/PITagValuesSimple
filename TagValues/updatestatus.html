@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="myapp"  ng-controller="appController as ctrlr">
+
+<head>
+    <title>{{(totalIssues())?"("+totalIssues()+")":''}} Plant Status Update</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="styles.css" />
+
+</head>
+
+<body ng-cloak>
+    <div class="container">
+        <div class="jumbotron">
+            <a class="pull-right" href="https://muntse-s-08817.europe.shell.com/piwebapi/help" target="_blank">First time user? Click this link and accept the security warning (sorry)</a>
+            <h1>STCA PI Status Updater</h1>
+            <div ng-show="errors.length" class="alert alert-danger">
+                {{errors}}<button type="button" class="close" ng-click="clearErrors()" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="interface-issues">
+                Analytics:
+                <span ng-class="getLabelClassesFromStatusText(data.InterfaceIssues['AF Analytics Service.StatusSummary'].Value.Value)">{{data.InterfaceIssues['AF Analytics Service.StatusSummary'].Value.Value}}</span>,
+                GC OD:
+                <span ng-class="getLabelClassesFromStatusText(data.InterfaceIssues['UFL for GC data to OD.StatusSummary'].Value.Value)">{{data.InterfaceIssues['UFL for GC data to OD.StatusSummary'].Value.Value}}</span>,
+                GC PCD: <span ng-class="getLabelClassesFromStatusText(data.InterfaceIssues['UFL for GC data to PCD.StatusSummary'].Value.Value)">{{data.InterfaceIssues['UFL for GC data to PCD.StatusSummary'].Value.Value}}</span>,
+                Warning: <span class="label label-warning">{{data.InterfaceIssues['STCAInterfaces-Warning Count'].Value.Value}}</span>, 
+                Alert: <span class="label label-danger">{{data.InterfaceIssues['STCAInterfaces-Alert Count'].Value.Value}}</span>, 
+                Update: <span class="label label-info">{{data.InterfaceIssues['STCAInterfaces-Update Count'].Value.Value}}</span>
+                <div class="last-updated pull-right small">Last updated: {{data.lastUpdated | timeAgo}} <label><input type="checkbox" ng-model="prefs.autoRefresh"> Auto <i class="glyphicon glyphicon-refresh"></i>?</label></div>
+            </div>
+
+            <button class="btn btn-primary" ng-disabled="isUpdating" ng-click="getInterfaceIssuesEF()"><i class="glyphicon glyphicon-flag"></i> Show All Interface Issues</button>
+        </div>
+
+
+        <input type="text" select-on-click class="" ng-model="data.plantSearchText" placeholder="Search Plants" autofocus>        Plants Found: <span class="badge">{{filteredPlants.length}}</span>
+        <select name="plant-selector" id="plant-selector" ng-model="data.selectedPlant.both" ng-change="getPlantData()">
+            <option ng-hide="data.plants.length > 3" >Loading...</option>
+            <option ng-show="data.plants.length > 3" value="Select a plant" ng-selected="1">Select a plant:</option>
+            <option value="{{plant.Name+','+plant.WebId}}" ng-repeat="plant in data.plants | filter:data.plantSearchText as filteredPlants" >{{plant.Name}}</option>
+        </select>
+        <button class="btn btn-default" ng-disabled="isUpdating" ng-click="getPlants();getInterfaceAlertsCount()"><i class="glyphicon glyphicon-refresh"></i></button>        Total Plant count: <span class="badge">{{data.plants.length || "Loading"}}</span>
+        <br/>
+        <br/>
+        <div class="h4" ng-show="data.selectedPlant.interfaceIssues">Showing interfaces with issues: <span class="badge">{{data.selectedPlant.interfaces.length}}</span></div>
+        <div class="row">
+            <div class="col-sm-6" ng-show="data.selectedPlant.Attributes">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Plant Status <strong>{{data.selectedPlant.Name}}</strong> <button class="btn btn-primary pull-right"
+                                ng-disabled="isUpdating" ng-click="getPlantData()"><i class="glyphicon glyphicon-refresh"></i> Refresh</button></h3>
+                        <div class="clearfix"></div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="status-table">
+                            <table>
+                                <tr>
+                                    <th>Owner:</th>
+                                    <td>
+                                        <a ng-href="mailto:{{data.selectedPlant.Attributes['Owners/Contact Persons'].Value.Value | encodeURIComponent}}?cc=pt-stca-pi-support@shell.com&subject={{data.selectedPlant.Attributes['ID'].Value.Value | encodeURIComponent}} PI Data">
+                                            <i class="glyphicon glyphicon-envelope"></i> 
+                                            {{data.selectedPlant.Attributes['Owners/Contact Persons'].Value.Value}}
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Status Comment:</th>
+                                    <td>
+                                        {{data.selectedPlant.Attributes['Status Comment'].Value.Value}}
+                                        <br/>
+                                        <form ng-submit="updateValue(data.selectedPlant.Attributes['Status Comment'].WebId, 'Admin: '+data.selectedPlant.Attributes['Status Comment'].newValue)">
+                                            <div class="input-group">
+                                                <input type="text" select-on-click class="form-control" ng-model="data.selectedPlant.Attributes['Status Comment'].newValue"
+                                                    placeholder="New comment" placeholder="plant comment">
+                                                <div class="input-group-btn">
+                                                    <button class="btn btn-default" ng-disabled="isUpdating" type="submit">Update</button>
+                                                    <button class="btn btn-default btn-success" ng-click="updateValue(data.selectedPlant.Attributes['Status Comment'].WebId, 'Admin: data coming in');updateValue(data.selectedPlant.Attributes['Status/Note'].WebId, {Value:0})"
+                                                        type="button">Set to OK <i class="glyphicon glyphicon-ok"></i></button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Plant Status:</th>
+                                    <td>
+                                        <span ng-class="getLabelClassesFromStatusText(intrf.Attributes['Status Summary'].Value.Value.Name)">{{data.selectedPlant.Attributes["Status/Note"].Value.Value.Name}} </span>
+                                        <!--</div>-->
+                                        <!--<div class="col-sm-6">-->
+                                        <form ng-submit="updateValue(data.selectedPlant.Attributes['Status/Note'].WebId, {Value:data.selectedPlant.newStatusValue})">
+                                            <select ng-model="data.selectedPlant.newStatusValue">
+                                                <option value="0">Good</option>
+                                                <option value="1">Under Maintenance</option>
+                                                <option value="2">Problem</option>
+                                                <option value="3">Other</option>
+                                                <option value="4">Shut down</option>
+                                                <option value="5">Transitioning to OPC</option>
+                                                <option value="6">Idle</option>                                                
+                                            </select>
+                                            <button class="btn btn-default" ng-disabled="isUpdating" type="submit">Update</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6" ng-repeat="intrf in data.selectedPlant.interfaces">
+                <div class="panel panel-default ">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Int Status: {{intrf.Name}}
+                            <span ng-class="getLabelClassesFromStatusText(intrf.Attributes['Status Summary'].Value.Value)">{{intrf.Attributes["Status Summary"].Value.Value}} </span>
+                        </h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="interface-table">
+                            <table>
+                                <tr>
+                                    <th>Status Summary: </th>
+                                    <td><span ng-class="getLabelClassesFromStatusText(intrf.Attributes['Status Summary'].Value.Value)">{{intrf.Attributes["Status Summary"].Value.Value}}</span>, recent uptime: {{intrf.Attributes["Uptime Percent"].Value.Value | number}}%</td>
+                                </tr>
+
+                                <tr>
+                                    <th>Expected Status:</th>
+                                    <td>
+                                        <!--<div class="col-sm-6">-->
+                                        <span>Current setting: {{intrf.Attributes["Status/Note"].Value.Value.Name}}</span>
+                                        <!--</div>-->
+                                        <!--<div class="col-sm-6">-->
+                                        <form ng-submit="updateValue(intrf.Attributes['Status/Note'].WebId, {Value:intrf.newStatusValue})">
+                                            <select ng-model="intrf.newStatusValue">
+                                                <option value="0">Good</option>
+                                                <option value="1">Under Maintenance</option>
+                                                <option value="2">Problem</option>
+                                                <option value="3">Other</option>
+                                                <option value="4">Shut down</option>
+                                                <option value="5">Transitioning to OPC</option>
+                                                <option value="6">Idle</option>
+                                            </select>
+                                            <button class="btn btn-default" ng-disabled="isUpdating" type="submit"><i class="glyphicon glyphicon-ok"></i></button>
+                                            <!--</div>-->
+                                        </form>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Ping Status:</th>
+                                    <td><span class="ping-response">
+                                        <span ng-class="{'label label-danger':(intrf.Attributes['Ping Latency'].Value.Value.IsSystem && intrf.Attributes['Ping Latency'].Value.Value.Name != 'Good'),'label label-success':(intrf.Attributes['Ping Latency'].Value.Value.Name != 'Good')}">
+                                            {{intrf.Attributes['Ping Latency'].Value.Value.Name == null?((intrf.Attributes['Ping Latency'].Value.Value | number:0.0 )+' ms'):intrf.Attributes['Ping Latency'].Value.Value.Name}}</span> 
+                                            Last Good: <span class="timestamp" ng-attr-title="{{intrf.Attributes['Ping Latency.Last Good'].Value.Value.Name || intrf.Attributes['Ping Latency.Last Good'].Value.Value | date:'medium'}}">{{intrf.Attributes['Ping Latency.Last Good'].Value.Value.Name || intrf.Attributes['Ping Latency.Last Good'].Value.Value | timeAgo}}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Data Status:</th>
+                                    <td><span class="data-status">
+                                        <span ng-class="getLabelClassesFromStatusText(intrf.Attributes['Intf Status Tag-Status'].Value.Value.Name)">
+                                            {{intrf.Attributes['Intf Status Tag-Status'].Value.Value.Name}}</span> Last Good:
+                                        <span class="timestamp" ng-attr-title="{{intrf.Attributes['Intf Status Tag.Last Good'].Value.Value.Name || intrf.Attributes['Intf Status Tag.Last Good'].Value.Value | date:'medium'}}">{{intrf.Attributes['Intf Status Tag.Last Good'].Value.Value.Name || intrf.Attributes['Intf Status Tag.Last Good'].Value.Value | timeAgo}}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>IP Address:</th>
+                                    <td>{{intrf.Attributes["Source Machine IP"].Value.Value}}</td>
+                                </tr>
+
+                                <tr>
+                                    <th>Plant ID:</th>
+                                    <td><a ng-click="data.plantSearchText = intrf.Attributes['Plant ID'].Value.Value">{{intrf.Attributes["Plant ID"].Value.Value}}</a></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="./scripts/jquery.min.js"></script>
+    <script src="./scripts/bootstrap.min.js"></script>
+    <script src="./scripts/angular.min.js"></script>
+    <script src="./scripts/angular-resource.min.js"></script>
+    <script src="./scripts/angular-route.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular-animate.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular-aria.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular-messages.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0/angular-material.min.js"></script>
+    <script src="./scripts/nglocalstorage.js"></script>
+    <script src="./scripts/angular-timeago.min.js"></script>
+    <script src="./scripts/updatestatus.js"></script>
+
+    <!-- 	<script src="//cdnjs.cloudflare.com/ajax/libs/less.js/2.4.0/less.min.js" type="text/javascript"></script> -->
+</body>
+
+</html>

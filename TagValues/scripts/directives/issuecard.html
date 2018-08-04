@@ -1,0 +1,169 @@
+<md-card>
+    <md-card-header>
+        <md-card-avatar>
+            <i class="material-icons" ng-if="issueEF.TemplateName.startsWith('Interface')">device_hub</i>
+            <i class="material-icons" ng-if="issueEF.TemplateName.startsWith('Machine')">important_devices</i>
+        </md-card-avatar>
+        <md-card-header-text>
+            <span class="md-title"><span ng-if="issueEF.TemplateName.startsWith('Machine')">Machine: </span> <span ng-if="issueEF.TemplateName.startsWith('Interface')">Interface: </span> {{issueEF.Attributes["Name"].Value.Value}} </span> <span ng-if="issueEF.TemplateName.startsWith('Interface')">{{issueEF.Name}}</span>
+            <div class="md-subhead">
+                <span ng-if="issueEF.TemplateName.startsWith('Machine')">{{issueEF.Name}}</span>
+                <div ng-if="issueEF.TemplateName.startsWith('Interface')">
+                    Status Summary:
+                    <pi-label-value value="issueEF.Attributes['Status Summary'].Value"></pi-label-value>
+                    <span>
+                    <md-tooltip md-direction="top">
+                        Interface uptime percentage for the past week
+                    </md-tooltip>
+                        Uptime: {{issueEF.Attributes["Uptime Percent"].Value.Value | number:0}}%
+                </span>
+                </div>
+            </div>
+        </md-card-header-text>
+    </md-card-header>
+    <md-card-content>
+        <md-list>
+            <!--interface specific-->
+            <md-list-item class="md-2-line" ng-if="issueEF.TemplateName.startsWith('Interface')">
+                <md-icon aria-label="comment" class="md-avatar material-icons">timeline</md-icon>
+                <div class="md-list-item-text">
+                    <h3>Data status:</h3>
+                    <p>
+                        <pi-label-value value="issueEF.Attributes['Intf Status Tag-Status'].Value"></pi-label-value> Last Good: <span class="timestamp">{{issueEF.Attributes['Intf Status Tag.Last Good'].Value.Value.Name || issueEF.Attributes['Intf Status Tag.Last Good'].Value.Value | timeAgo}}</span>
+                    </p>
+                </div>
+            </md-list-item>
+            <md-list-item class="md-2-line" ng-if="issueEF.TemplateName.startsWith('Interface')">
+                <md-icon aria-label="signal" ng-show="issueEF.Attributes['Ping Latency'].Value.Value.Name == null" class="md-avatar material-icons">wifi</md-icon>
+                <md-icon aria-label="signal" ng-hide="issueEF.Attributes['Ping Latency'].Value.Value.Name == null" class="md-avatar material-icons">signal_wifi_off</md-icon>
+                <div class="md-list-item-text">
+                    <h3>Ping status:</h3>
+                    <p>
+                        <span class="ping-response">
+                            <span ng-if="issueEF.Attributes['Ping Latency']" ng-class="{'label label-warning':(issueEF.Attributes['Ping Latency'].Value.Value.IsSystem && issueEF.Attributes['Ping Latency'].Value.Value.Name != 'I/O Timeout'),'label label-success':(issueEF.Attributes['Ping Latency'].Value.Value >= 0), 'label label-danger':(issueEF.Attributes['Ping Latency'].Value.Value.Name.startsWith('I/O Timeout'))}">
+                                {{issueEF.Attributes['Ping Latency'].Value.Value.Name == null?((issueEF.Attributes['Ping Latency'].Value.Value | number:3) +' ms'):issueEF.Attributes['Ping Latency'].Value.Value.Name}}</span>
+                                <!--{{issueEF.Attri}}-->
+                                <pi-label-value value="issueEF.Attributes['Ping Latency-Status'].Value" ng-if="!issueEF.Attributes['Ping Latency']"></pi-label-value>
+                                Last Good: <span class="timestamp">{{issueEF.Attributes['Ping Latency.Last Good'].Value.Value.Name || issueEF.Attributes['Ping Latency.Last Good'].Value.Value | timeAgo}}
+                                    <md-tooltip md-direction="top">
+                                        {{issueEF.Attributes['Ping Latency.Last Good'].Value.Value.Name || issueEF.Attributes['Ping Latency.Last Good'].Value.Value | timeAgo}}
+                                    </md-tooltip>
+                        </span>
+                        <br/>
+                        <md-input-container>
+                            <label>IP Address: </label>
+                            <input ng-model="issueEF.Attributes['Source Machine IP'].Value.Value" readonly="readonly" md-select-on-focus>
+                        </md-input-container> <span ng-show="issueEF.Attributes['Source Machine IP'].Value.Value.startsWith('145.30.157')">VLAN 807 <md-icon>settings_input_composite</md-icon></span>
+                    </p>
+                </div>
+            </md-list-item>
+            <md-list-item class="md-2-line" ng-if="issueEF.TemplateName.startsWith('Interface')">
+                <div class="md-list-item-text">
+                    Plant ID:
+                    <md-button class="" ng-click="viewPlantDetails(issueEF.Attributes['Plant ID'].Value.Value)">
+                        <md-tooltip md-direction="top">
+                            View full status for plant {{issueEF.Attributes["Plant ID"].Value.Value}}
+                        </md-tooltip>
+                        {{issueEF.Attributes["Plant ID"].Value.Value}}
+                        <md-icon aria-label="go-to" class="material-icons">share</md-icon>
+                    </md-button>
+                </div>
+            </md-list-item>
+            <md-list-item class="md-2-line" ng-if="issueEF.TemplateName.startsWith('Interface')">
+                <div class="md-list-item-text">
+                    <form ng-submit="updateValue(issueEF.Attributes['Status/Note'].WebId, {Value:issueEF.newStatusValue})">
+                        <md-input-container>
+                            <label>Update status: {{issueEF.Attributes['Status/Note'].Value.Value.Name}}</label>
+                            <md-tooltip md-direction="top">
+                                Current status is: "{{issueEF.Attributes['Status/Note'].Value.Value.Name}}"
+                            </md-tooltip>
+                            <md-select class="md-no-underline" ng-model="issueEF.newStatusValue">
+                                <md-option value="0">Good</md-option>
+                                <md-option value="1">Under Maintenance</md-option>
+                                <md-option value="2">Problem</md-option>
+                                <md-option value="3">Other</md-option>
+                                <md-option value="4">Shut down</md-option>
+                                <md-option value="5">Transitioning to OPC</md-option>
+                                <md-option value="6">Idle</md-option>
+                            </md-select>
+                        </md-input-container>
+
+                        <md-button class="md-raised" ng-click="updateValue(issueEF.Attributes['Status/Note'].WebId, {Value:issueEF.newStatusValue})"
+                            ng-disabled="isUpdating || !(issueEF.newStatusValue >= 0 && issueEF.newStatusValue <= 6)" type="submit">Update
+                            </md-button>
+
+                            <md-button class="md-raised md-primary" ng-disabled="isUpdating || issueEF.Attributes['Status/Note'].Value.Value.Value === 0"
+                                ng-click="updateValue(issueEF.Attributes['Status/Note'].WebId, {Value:0})" type="button">Set to OK
+                                <md-icon aria-label="comment" class="material-icons">check</md-icon>
+                                </md-button>
+                    </form>
+                </div>
+            </md-list-item>
+
+            <!--machine specific-->
+            <md-list-item class="md-2-line" ng-if="issueEF.TemplateName.startsWith('Machine')">
+                <md-icon aria-label="signal" class="md-avatar material-icons">multiline_chart</md-icon>
+                <div class="md-list-item-text">
+                    <h3>Overall status:</h3>
+                    <pi-label-value value="issueEF.Attributes['Machine Status'].Value"></pi-label-value>: {{issueEF.Attributes['Machine Status Summary'].Value.Value}}
+                </div>
+            </md-list-item>
+
+
+            <md-list-item class="md-2-line" ng-if="issueEF.TemplateName.startsWith('Machine')">
+                <md-icon aria-label="signal" class="md-avatar material-icons">developer_board</md-icon>
+                <div class="md-list-item-text">
+                    <h3>CPU status:</h3>
+                    <p>
+                        {{issueEF.Attributes['CPU Usage'].Value.Value | number:1}} {{issueEF.Attributes['CPU Usage'].Value.UnitsAbbreviation}}
+                        <br /> Status:
+                        <pi-label-value value="issueEF.Attributes['CPU Warning'].Value"></pi-label-value>
+                    </p>
+                </div>
+            </md-list-item>
+
+            <md-list-item class="md-2-line" ng-if="issueEF.TemplateName.startsWith('Machine')">
+                <md-icon aria-label="signal" class="md-avatar material-icons">memory</md-icon>
+                <div class="md-list-item-text">
+                    <h3>Available RAM:</h3>
+                    <p>
+                        {{issueEF.Attributes['Available Memory'].Value.Value | number:1}} {{issueEF.Attributes['Available Memory'].Value.UnitsAbbreviation}}
+                        <br /> Status:
+                        <pi-label-value value="issueEF.Attributes['% Memory Warning'].Value"></pi-label-value>
+                    </p>
+                </div>
+            </md-list-item>
+            <md-list-item class="md-2-line" ng-show="issueEF.TemplateName.startsWith('Machine')">
+                <md-icon aria-label="signal" class="md-avatar material-icons">storage</md-icon>
+                <div class="md-list-item-text">
+                    <h3>Disk Status:</h3>
+                    <p>
+                        Status:
+                        <pi-label-value value="issueEF.Attributes['Disk Status Summary'].Value"></pi-label-value>
+                    </p>
+                </div>
+            </md-list-item>
+            <md-list-item class="md-2-line" ng-if="issueEF.TemplateName.startsWith('Machine') && issueEF.Attributes['Additional Machine Issues Count']">
+                <md-icon aria-label="signal" class="md-avatar material-icons"><i class="material-icons">sync_problem</i></md-icon>
+                <div class="md-list-item-text">
+                    <h3>Other Issues (PI Server): {{issueEF.Attributes['Additional Machine Issues Count'].Value.Value}}</h3>
+                     
+                    <p ng-if="issueEF.Attributes['Additional Machine Issues Count'].Value.Value">
+                        Status:
+                        <!--<span class="label label-warning">{{issueEF.Attributes['Additional Machine Issues Count'].Value.Value}}</span>:--> {{issueEF.Attributes['Additional Machine Issues Text'].Value.Value}}
+                    </p>
+                </div>
+            </md-list-item>
+            <!--<md-list-item class="md-2-line" ng-if="issueEF.TemplateName.startsWith('Machine')">
+                <md-icon aria-label="signal" class="md-avatar material-icons">settings_ethernet</md-icon>
+                <div class="md-list-item-text">
+                    <h3>Other Status:</h3>
+                    <p>
+                        # of issues: {{issueEF.Attributes['Other Warnings'].Value.Value}} {{issueEF.Attributes['Other Warnings Text'].Value.Value}}
+                            
+                    </p>
+                </div>
+            </md-list-item>-->
+        </md-list>
+    </md-card-content>
+</md-card>

@@ -1,0 +1,210 @@
+[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+  display: none !important;
+}
+
+.tag{
+    padding-right: 1ex;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.inline{
+  display: inline;
+}
+.flip {
+    -ms-transform: rotate(180deg); /* IE 9 */
+    -webkit-transform: rotate(180deg); /* Chrome, Safari, Opera */
+    transform: rotate(180deg);
+}
+.status-table table{
+    width: 100%;
+}
+.header-lastupdated{
+  font-size: 12px;
+  line-height: 12px;
+}
+
+@-webkit-keyframes rotating /* Safari and Chrome */ {
+  from {
+    -ms-transform: rotate(0deg);
+    -moz-transform: rotate(0deg);
+    -webkit-transform: rotate(0deg);
+    -o-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  to {
+    -ms-transform: rotate(360deg);
+    -moz-transform: rotate(360deg);
+    -webkit-transform: rotate(360deg);
+    -o-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@keyframes rotating {
+  from {
+    -ms-transform: rotate(0deg);
+    -moz-transform: rotate(0deg);
+    -webkit-transform: rotate(0deg);
+    -o-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  to {
+    -ms-transform: rotate(360deg);
+    -moz-transform: rotate(360deg);
+    -webkit-transform: rotate(360deg);
+    -o-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+.btn[disabled] i.glyphicon-refresh {
+  -webkit-animation: rotating 2s linear infinite;
+  -moz-animation: rotating 2s linear infinite;
+  -ms-animation: rotating 2s linear infinite;
+  -o-animation: rotating 2s linear infinite;
+  animation: rotating 2s linear infinite;
+}
+.interface-issues{
+    padding-bottom: 10px;
+}
+.label {
+  display: inline;
+  padding: .2em .6em .3em;
+  font-size: 75%;
+  font-weight: bold;
+  line-height: 1;
+  color: #fff;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: .25em;
+  text-shadow: 1px 1px 1px rgba(150, 150, 150, 1);
+}
+a.label:hover,
+a.label:focus {
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+}
+.label:empty {
+  display: none;
+}
+.btn .label {
+  position: relative;
+  top: -1px;
+}
+.label-default {
+  background-color: #777;
+}
+.label-default[href]:hover,
+.label-default[href]:focus {
+  background-color: #5e5e5e;
+}
+.label-primary {
+  background-color: #337ab7;
+}
+.label-primary[href]:hover,
+.label-primary[href]:focus {
+  background-color: #286090;
+}
+.label-success {
+  background-color: #5cb85c;
+}
+.label-success[href]:hover,
+.label-success[href]:focus {
+  background-color: #449d44;
+}
+.label-info {
+  background-color: #5bc0de;
+}
+.label-info[href]:hover,
+.label-info[href]:focus {
+  background-color: #31b0d5;
+}
+.label-warning {
+  background-color: #f0ad4e;
+}
+.label-warning[href]:hover,
+.label-warning[href]:focus {
+  background-color: #ec971f;
+}
+.label-danger {
+  background-color: #d9534f;
+}
+.label-danger[href]:hover,
+.label-danger[href]:focus {
+  background-color: #c9302c;
+}
+
+
+.lt1minutes
+{
+    color:#17AD2D;
+}
+.lt2minutes
+{
+    color:#2FC21B;
+}
+.lt10minutes
+{
+    color:#6CC21B;
+}
+
+.lt10minutes
+{
+    color:#9DD622;
+}
+
+.lt60minutes
+{
+    color:#B8D622;
+}
+
+.lt120minutes
+{
+    color:#D6D022;
+}
+
+.lt720minutes
+{
+    color:#D6AC22;
+}
+
+.lt1440minutes
+{
+    color:#D68222;
+}
+.oldvalue
+{
+    color:red;
+}
+
+.goodsysval 
+{
+    color:#17AD2D;
+}
+.systemdigitalstate
+{
+    color:#F0782E;    
+}
+.notonbothservers
+{
+    background-color:#D6D6D6;
+}
+table.tag-values-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+table.tag-values-table td,table.tag-values-table th
+{
+    padding:4px;
+    border: 1px solid #000;
+}
+table.tag-values-table th {
+  background-color: rgb(255,235,59); 
+}
+table.tag-values-table td {
+  background-color: white;
+}
+
+
+ 

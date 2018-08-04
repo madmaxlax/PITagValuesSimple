@@ -1,0 +1,9 @@
+.tag{
+    padding-right: 1ex;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.status-table table{
+    width: 100%;
+}

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="myapp" ng-controller="appController as ctrlr">
+
+<head>
+	<title >PI Web API Test</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="shortcut icon" href="favicon.ico">
+	<link rel="icon" type="image/png" sizes="32x32" href="./images/favicon-32x32.png">
+	<link rel="apple-touch-icon" href="images/icons/apple-icon.png">
+	<link rel="apple-touch-icon" sizes="72x72" href="images/icons/apple-icon-72x72.png">
+    
+
+</head>
+
+<body>
+	<h1>iPad Test</h1>
+	<strong>Value: </strong> {{Value.Value}} @ {{Value.Timestamp | date:'yyyy-MM-dd h:mm:ss a'}} <br>
+    Fetched at {{fetchedAt | date:'yyyy-MM-dd h:mm:ss a'}}
+    <br>
+    <button ng-click="fetchValue()">Fetch again</button>
+
+    <br>
+    <br>
+    <strong>Errors: </strong> <pre> {{stringify(errors)}} </pre>
+
+	<script src="./scripts/angular.min.js"></script>
+	<script src="./scripts/angular-resource.min.js"></script>
+	<script src="./scripts/ipadtest.js"></script>
+</body>
+
+</html>

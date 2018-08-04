@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AF Hierarchy Viewer</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.js"></script>
+  <script type="text/javascript">
+    var childrenMap = {
+      PISystems: ['AssetServers'],
+      AssetServers: ['Databases'],
+      Databases: ['Elements'],
+      Elements: ['Elements', 'Attributes'],
+      Attributes: ['Attributes']
+    };
+	
+    function node(name, type, links, parentDiv) {
+      this.type = type;
+      this.links = links;
+      this.flipper = $('<span class="flipper">+</span>').click(flip.bind(this, this));
+      parentDiv.append(this.flipper).append('<span class="' + type + '"> ' + name + '</span><br />');
+      this.div = $('<div></div>').hide().appendTo(parentDiv);
+    }
+
+    function loadChildren(n) {
+      n.loaded = true;
+	  var count = 0;
+      childrenMap[n.type].forEach(function(childCollection) {
+		count = count + 1;
+		console.log(n.links);
+		if(n.type === "Attributes")
+		{
+			$.get(n.links["Value"], function(collection) {
+				n["Value"] = new node("Value: "+collection.Value, "Attributes", null, n.div); 
+			});
+		}
+		else
+		{
+			$.get(n.links[childCollection], function(collection) {
+			  n[childCollection] = collection.Items.map(function (item) {
+				return new node(item.Name, childCollection, item.Links, n.div);
+			  });
+			});
+		}
+      });
+
+    }
+
+    function flip(n) {
+      if (!n.loaded) { loadChildren(n); }
+      n.flipper.html(n.flipper.html() == '+' ? '-' : '+');
+      n.div.toggle();
+    }
+
+    $(function() {
+		$.ajaxSetup({
+		   xhrFields: {
+			  withCredentials: true
+		   }
+		});
+      root = new node('PI Systems', 'PISystems',
+        { AssetServers: 'https://muntse-s-08817.europe.shell.com/piwebapi/assetservers' }, $("#root"));
+    });
+  </script>
+  <style type="text/css">
+    div {
+      left: 10px;
+      position: relative;
+    }
+    .flipper {
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+</body>
+</html>

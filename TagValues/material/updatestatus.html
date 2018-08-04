@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="myapp">
+
+<head>
+    <title>Plant Status Update</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="./bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="styles.css" />
+
+</head>
+
+<body>
+    <div class="container" ng-controller="appController as ctrlr">
+        <div class="jumbotron">
+            <h1>Update Status</h1>
+            <div ng-show="errors.length" class="alert alert-danger">{{errors}}<button type="button" class="close" ng-click="clearErrors()" aria-label="Close">
+  <span aria-hidden="true">&times;</span>
+</button></div>
+        </div>
+
+
+        <input type="text" select-on-click class="" ng-model="data.plantSearchText" placeholder="Search Plants" autofocus>
+        <select name="plant-selector" id="plant-selector" ng-model="data.selectedPlant.both" ng-change="getPlantData()">
+            <option ng-hide="data.plants.length > 3" >Loading...</option>
+            <option ng-show="data.plants.length > 3" value="Select a plant" ng-selected="1">Select a plant:</option>
+            <option value="{{plant.Name+','+plant.WebId}}" ng-repeat="plant in data.plants | filter:data.plantSearchText" >{{plant.Name}}</option>
+        </select>
+        <button class="btn btn-default" ng-click="getPlants()"><i class="glyphicon glyphicon-refresh"></i></button> Plant
+        count: <span class="badge">{{data.plants.length || "Loading"}}</span> Good plants:
+        <span class="label label-success">FIX</span>, meh plants: <span class="label label-warning">FIX</span>
+        <br/>
+        <br/>
+        <div class="row">
+            <div class="col-sm-6" ng-show="data.selectedPlant.Attributes">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Plant Status <button class="btn btn-primary pull-right" ng-click="getPlantData()"><i class="glyphicon glyphicon-refresh"></i> Refresh</button></h3>
+                        <div class="clearfix"></div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="status-table">
+                            <table>
+                                <tr>
+                                    <th>Owner:</th>
+                                    <td>
+                                        <a ng-href="mailto:{{data.selectedPlant.Attributes['Owners/Contact Persons'].Value.Value | encodeURIComponent}}?cc=pt-stca-pi-support@shell.com&subject={{data.selectedPlant.Attributes['ID'].Value.Value | encodeURIComponent}} PI Data">
+                                            {{data.selectedPlant.Attributes['Owners/Contact Persons'].Value.Value}}
+                                            </a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Status Comment:</th>
+                                    <td>
+                                        {{data.selectedPlant.Attributes['Status Comment'].Value.Value}}
+                                        <br/>
+                                        <form ng-submit="updateValue(data.selectedPlant.Attributes['Status Comment'].WebId, 'Admin: '+data.selectedPlant.Attributes['Status Comment'].newValue)">
+                                            <div class="input-group">
+                                                <input type="text" select-on-click class="form-control" ng-model="data.selectedPlant.Attributes['Status Comment'].newValue"
+                                                    placeholder="New comment" placeholder="plant comment">
+                                                <div class="input-group-btn">
+                                                    <button class="btn btn-default" type="submit">Update</button>
+                                                    <button class="btn btn-default btn-success" ng-click="updateValue(data.selectedPlant.Attributes['Status Comment'].WebId, 'Admin: data coming in');updateValue(data.selectedPlant.Attributes['Status/Note'].WebId, {Value:0})"
+                                                        type="button">Set to OK <i class="glyphicon glyphicon-ok"></i></button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Plant Status:</th>
+                                    <td>
+                                        <span ng-class="{'label label-warning':(data.selectedPlant.Attributes['Status/Note'].Value.Value.Value !== 0 && data.selectedPlant.Attributes['Status/Note'].Value.Value.Value !== 4 ),'label label-success':(data.selectedPlant.Attributes['Status/Note'].Value.Value.Value === 0),'label label-danger':(data.selectedPlant.Attributes['Status/Note'].Value.Value.Value === 4)}">{{data.selectedPlant.Attributes["Status/Note"].Value.Value.Name}} </span>
+                                        <!--</div>-->
+                                        <!--<div class="col-sm-6">-->
+                                        <form ng-submit="updateValue(data.selectedPlant.Attributes['Status/Note'].WebId, {Value:data.selectedPlant.newStatusValue})">
+                                            <select ng-model="data.selectedPlant.newStatusValue">
+                                                <option value="0">Good</option>
+                                                <option value="1">Under Maintenance</option>
+                                                <option value="2">Problem</option>
+                                                <option value="3">Other</option>
+                                                <option value="4">Shut down</option>
+                                                <option value="5">Transitioning to OPC</option>
+                                                <option value="6">Idle</option>                                                
+                                            </select>
+                                            <button class="btn btn-default" type="submit">Update</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6" ng-repeat="intrf in data.selectedPlant.interfaces">
+                <div class="panel panel-default ">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Int Status: {{intrf.Name}} 
+                             <span ng-class="{'label label-warning':(!intrf.Attributes['Status Summary'].Value.Value.startsWith('All Good') &&!intrf.Attributes['Status Summary'].Value.Value.startsWith('Alert ')),'label label-success':(intrf.Attributes['Status Summary'].Value.Value.startsWith('All Good')),'label label-danger':(intrf.Attributes['Status Summary'].Value.Value.startsWith('Alert'))}">{{intrf.Attributes["Status Summary"].Value.Value}} </span>
+                        </h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="interface-table">
+                            <table>
+                                <tr>
+                                    <th>Status Summary: </th>
+                                    <td>{{intrf.Attributes["Status Summary"].Value.Value}}</td>
+                                </tr>
+
+                                <tr>
+                                    <th>Status:</th>
+                                    <td>
+                                        <!--<div class="col-sm-6">-->
+                                        <span ng-class="{'label label-warning':(intrf.Attributes['Status/Note'].Value.Value.Value !== 0 && intrf.Attributes['Status/Note'].Value.Value.Value !== 4 ),'label label-success':(intrf.Attributes['Status/Note'].Value.Value.Value === 0),'label label-danger':(intrf.Attributes['Status/Note'].Value.Value.Value === 4)}">{{intrf.Attributes["Status/Note"].Value.Value.Name}} </span>
+                                        <!--</div>-->
+                                        <!--<div class="col-sm-6">-->
+                                        <form ng-submit="updateValue(intrf.Attributes['Status/Note'].WebId, {Value:intrf.newStatusValue})">
+                                            <select ng-model="intrf.newStatusValue">
+                                                <option value="0">Good</option>
+                                                <option value="1">Under Maintenance</option>
+                                                <option value="2">Problem</option>
+                                                <option value="3">Other</option>
+                                                <option value="4">Shut down</option>
+                                                <option value="5">Transitioning to OPC</option>
+                                                <option value="6">Idle</option>
+                                            </select>
+                                            <button class="btn btn-default" type="submit"><i class="glyphicon glyphicon-ok"></i></button>
+                                            <!--</div>-->
+                                        </form>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Ping Status:</th>
+                                    <td><span class="ping-response">
+                                        <span ng-class="{'label label-warning':(intrf.Attributes['Ping Latency'].Value.Value.IsSystem && intrf.Attributes['Ping Latency'].Value.Value.Name != 'Good'),'label label-success':(intrf.Attributes['Ping Latency'].Value.Value.Name != 'Good')}">
+                                            {{intrf.Attributes['Ping Latency'].Value.Value.Name == null?(intrf.Attributes['Ping Latency'].Value.Value+' ms'):intrf.Attributes['Ping Latency'].Value.Value.Name}}</span>                                        Last Good: <span class="timestamp">{{intrf.Attributes['Ping Latency.Last Good'].Value.Value | timeAgo}}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>IP Address:</th>
+                                    <td>{{intrf.Attributes["Source Machine IP"].Value.Value}}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="./scripts/jquery.min.js"></script>
+    <script src="./scripts/bootstrap.min.js"></script>
+    <script src="./scripts/angular.min.js"></script>
+    <script src="./scripts/angular-resource.min.js"></script>
+    <script src="./scripts/angular-route.min.js"></script>
+    <script src="./scripts/nglocalstorage.js"></script>
+    <script src="./scripts/angular-timeago.min.js"></script>
+    <script src="./scripts/updatestatus.js"></script>
+
+    <!-- 	<script src="//cdnjs.cloudflare.com/ajax/libs/less.js/2.4.0/less.min.js" type="text/javascript"></script> -->
+</body>
+
+</html>
