@@ -1,5 +1,6 @@
 /// <reference path="C:\Apps\Dropbox\Dev\typings\angularjs\angular.d.ts" />
 
+var PIWEBAPIURL = 'https://localhost';
 
 //stupid IE compatibility thing
 if (!String.prototype.startsWith) {
@@ -290,21 +291,21 @@ if (!String.prototype.startsWith) {
         }, {});
         return obj;
       },
-      plantsCall: $resource(" https://houcy1-s-06438.americas.shell.com/piwebapi/assetservers/F1RSBZod-1oDvEacRfdZO28CWwSE9VQ1kxLVMtMDY0Mzc/elements?searchFullHierarchy=true&templateName=Plant"),
-      elementAttrValuesCall: $resource("https://houcy1-s-06438.americas.shell.com/piwebapi/streamsets/:webid/value"),
-      interfacesCall: $resource("https://houcy1-s-06438.americas.shell.com/piwebapi/elements/:webid/elements?templateName=Interface"),
-      updateValueCall: $resource("https://houcy1-s-06438.americas.shell.com/piwebapi/streams/:webid/value"),
-      getValuesAdHocCall: $resource("https://houcy1-s-06438.americas.shell.com/piwebapi/streamsets/value"),
-      openIssuesEventFramesCall: $resource("https://houcy1-s-06438.americas.shell.com/piwebapi/assetservers/F1RSBZod-1oDvEacRfdZO28CWwSE9VQ1kxLVMtMDY0Mzc/eventframes?templateName=Issue&searchMode=InProgress&startTime=*-4w"),//default last 8 hours. added 4 weeks in case something is older
-      recentIssuesEventFramesCall: $resource("https://houcy1-s-06438.americas.shell.com/piwebapi/assetservers/F1RSBZod-1oDvEacRfdZO28CWwSE9VQ1kxLVMtMDY0Mzc/eventframes?templateName=Issue"), //default last 8 hours. 
-      getArchivedValues: $resource("https://houcy1-s-06438.americas.shell.com/piwebapi/streams/:webid/recorded"),
-      //TagSearch: $resource('https://houcy1-s-06438.americas.shell.com/piwebapi/dataservers/s0Zwm3Ai1HVUiBciNvrmWsBQU1RDQVBJQ09MTA/points?namefilter=:name&maxCount=:max'),
-      TagSearch: $resource('https://houcy1-s-06438.americas.shell.com/piwebapi/search/query?scope=pi::piserver&count=:max&q=(name::name AND pointsource::pointsource)'),
-      TagValue: $resource("https://houcy1-s-06438.americas.shell.com/piwebapi/streams/:webid/value"),
-      TagValueGroup: $resource("https://houcy1-s-06438.americas.shell.com/piwebapi/streamsets/value"),
-      TagRecordedValues: $resource("https://houcy1-s-06438.americas.shell.com/piwebapi/streams/:webid/recorded?maxCount=:max&startTime=*&endTime=*-5y"),
-      TagAttributes: $resource("https://houcy1-s-06438.americas.shell.com/piwebapi/points/:webid/attributes"),
-      TagAttributesDescriptor: $resource("https://houcy1-s-06438.americas.shell.com/piwebapi/points/:webid/attributes/descriptor"),
+      plantsCall: $resource(PIWEBAPIURL+"/piwebapi/assetservers/F1RSBZod-1oDvEacRfdZO28CWwSE9VQ1kxLVMtMDY0Mzc/elements?searchFullHierarchy=true&templateName=Plant"),
+      elementAttrValuesCall: $resource(PIWEBAPIURL+"/piwebapi/streamsets/:webid/value"),
+      interfacesCall: $resource(PIWEBAPIURL+"/piwebapi/elements/:webid/elements?templateName=Interface"),
+      updateValueCall: $resource(PIWEBAPIURL+"/piwebapi/streams/:webid/value"),
+      getValuesAdHocCall: $resource(PIWEBAPIURL+"/piwebapi/streamsets/value"),
+      openIssuesEventFramesCall: $resource(PIWEBAPIURL+"/piwebapi/assetservers/F1RSBZod-1oDvEacRfdZO28CWwSE9VQ1kxLVMtMDY0Mzc/eventframes?templateName=Issue&searchMode=InProgress&startTime=*-4w"),//default last 8 hours. added 4 weeks in case something is older
+      recentIssuesEventFramesCall: $resource(PIWEBAPIURL+"/piwebapi/assetservers/F1RSBZod-1oDvEacRfdZO28CWwSE9VQ1kxLVMtMDY0Mzc/eventframes?templateName=Issue"), //default last 8 hours. 
+      getArchivedValues: $resource(PIWEBAPIURL+"/piwebapi/streams/:webid/recorded"),
+      //TagSearch: $resource(PIWEBAPIURL+"/piwebapi/dataservers/s0Zwm3Ai1HVUiBciNvrmWsBQU1RDQVBJQ09MTA/points?namefilter=:name&maxCount=:max'),
+      TagSearch: $resource(PIWEBAPIURL+"/piwebapi/search/query?scope=pi::piserver&count=:max&q=(name::name AND pointsource::pointsource)'),
+      TagValue: $resource(PIWEBAPIURL+"/piwebapi/streams/:webid/value"),
+      TagValueGroup: $resource(PIWEBAPIURL+"/piwebapi/streamsets/value"),
+      TagRecordedValues: $resource(PIWEBAPIURL+"/piwebapi/streams/:webid/recorded?maxCount=:max&startTime=*&endTime=*-5y"),
+      TagAttributes: $resource(PIWEBAPIURL+"/piwebapi/points/:webid/attributes"),
+      TagAttributesDescriptor: $resource(PIWEBAPIURL+"/piwebapi/points/:webid/attributes/descriptor"),
     };
   }]);
 
@@ -519,7 +520,7 @@ if (!String.prototype.startsWith) {
           //replace internal spaces with AND because of how query handles searches with spaces as OR
           name: $scope.prefs.tagsSearch.replace(" ", " AND name:") + star,
           max: $scope.prefs.tagsCountLimit,
-          piserver: 'STCHPICOLL',
+          piserver: 'PISERVERNAME',
           //replace internal spaces with AND because of how query handles searches with spaces as OR
           pointsource: (($scope.prefs.tagSearchPointsource == null || $scope.prefs.tagSearchPointsource === '') ? '*' : $scope.prefs.tagSearchPointsource.replace(" ", " AND pointsource:") + star)
         }, function (resp) {
